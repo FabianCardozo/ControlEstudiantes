@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -262,12 +263,15 @@
             <section id="section-students" class="section hidden">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold text-gray-800">Estudiantes</h2>
-                    <button onclick="openStudentModal()" class="flex items-center gap-2 btn-orange text-white px-4 py-2 rounded-lg transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                        </svg>
-                        Nuevo Estudiante
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openBulkImportModal()" class="flex items-center gap-2 btn-olive text-white px-4 py-2 rounded-lg transition">
+                            <span class="text-lg">⇧</span> Carga masiva Excel
+                        </button>
+                        <button onclick="openStudentModal()" class="flex items-center gap-2 btn-orange text-white px-4 py-2 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                            Nuevo Estudiante
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Filter by Classroom -->
@@ -303,48 +307,18 @@
             <!-- Attendance Section -->
             <section id="section-attendance" class="section hidden">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Control de Asistencia</h2>
-
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-orange-500">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">Seleccionar Aula:</label>
-                            <select id="attendanceClassroom" onchange="loadAttendanceData()" class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                                <option value="">Seleccione un aula</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">Fecha:</label>
-                            <input type="date" id="attendanceDate" onchange="loadAttendanceData()" class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                        </div>
-                        <div class="flex items-end gap-2">
-                            <button onclick="saveAttendance()" class="flex-1 btn-olive text-white px-4 py-2 rounded-lg transition">
-                                Guardar Asistencia
-                            </button>
-                            <button onclick="exportAttendancePDF()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg transition" title="Exportar PDF">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </button>
-                        </div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Seleccionar Aula:</label><select id="attendanceClassroom" onchange="loadAttendanceData()" class="w-full border border-gray-300 rounded-lg px-4 py-2"><option value="">Seleccione un aula</option></select></div>
+                        <div><label class="block text-gray-700 font-medium mb-2">Nueva fecha de asistencia:</label><input type="date" id="attendanceDate" class="w-full border border-gray-300 rounded-lg px-4 py-2"></div>
+                        <div class="flex items-end gap-2"><button onclick="addAttendanceDate()" class="flex-1 btn-orange text-white px-4 py-2 rounded-lg">Crear columna</button><button onclick="exportAttendancePDF()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg">Descargar PDF</button></div>
                     </div>
+                    <p class="text-sm text-gray-500 mt-3">Cada nueva fecha se carga inicialmente como P (presente) para todos los estudiantes. Haga clic en cada celda para alternar P, A y T.</p>
                 </div>
-
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-olive-700 text-white">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estudiante</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">DNI</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Presente</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Ausente</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Tardanza</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Justificado</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">% Asistencia</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendanceList" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los estudiantes</td></tr>
-                        </tbody>
+                <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full min-w-max">
+                        <thead class="bg-olive-700 text-white"><tr id="attendanceHeader"><th class="px-4 py-3 text-left text-xs uppercase">Estudiante</th><th class="px-4 py-3 text-left text-xs uppercase">DNI</th><th class="px-4 py-3 text-center text-xs uppercase">% Asistencia</th></tr></thead>
+                        <tbody id="attendanceList"><tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los estudiantes</td></tr></tbody>
                     </table>
                 </div>
             </section>
@@ -364,7 +338,7 @@
                         <div>
                             <label class="block text-gray-700 font-medium mb-2">Agregar Evaluacion:</label>
                             <div class="flex gap-2">
-                                <input type="text" id="newEvaluation" placeholder="Nombre de la evaluacion" class="flex-1 border border-gray-300 rounded-lg px-4 py-2">
+                                <input type="text" id="newEvaluation" placeholder="Ej: TP 1, PAR 1, EXP 1" class="flex-1 border border-gray-300 rounded-lg px-4 py-2">
                                 <button onclick="addEvaluation()" class="btn-orange text-white px-4 py-2 rounded-lg transition">
                                     Agregar
                                 </button>
@@ -401,24 +375,14 @@
 
             <!-- Syllabus Section -->
             <section id="section-syllabus" class="section hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Programa y Temas por Clase</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Programa y Libro de Temas</h2>
 
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-orange-500">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">Seleccionar Aula:</label>
-                            <select id="syllabusClassroom" onchange="loadSyllabusData()" class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                                <option value="">Seleccione un aula</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button onclick="openTopicModal()" class="btn-orange text-white px-4 py-2 rounded-lg transition">
-                                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                Agregar Tema/Clase
-                            </button>
-                        </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Seleccionar Aula:</label>
+                        <select id="syllabusClassroom" onchange="loadSyllabusData()" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                            <option value="">Seleccione un aula</option>
+                        </select>
                     </div>
                 </div>
 
@@ -426,20 +390,38 @@
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-olive-600">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">Programa del Curso</h3>
-                        <button onclick="saveSyllabusProgram()" class="btn-olive text-white px-4 py-2 rounded-lg transition text-sm">
-                            Guardar Programa
-                        </button>
+                        <div class="flex gap-2"><button onclick="saveSyllabusProgram()" class="btn-olive text-white px-4 py-2 rounded-lg transition text-sm">Guardar Programa</button><button onclick="exportProgramPDF()" class="bg-gray-800 text-white px-4 py-2 rounded-lg transition text-sm">Descargar PDF</button></div>
                     </div>
-                    <textarea id="syllabusProgram" rows="6" placeholder="Ingrese el programa del curso..." class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
+                    <div class="mb-3 flex items-center gap-3"><input type="file" id="programTextFile" accept=".txt,text/plain" onchange="loadProgramTextFile(event)" class="text-sm"><span class="text-xs text-gray-500">También puede pegar o escribir el programa directamente.</span></div>
+                    <textarea id="syllabusProgram" rows="10" placeholder="Pegue o escriba aquí el programa del curso..." class="w-full border border-gray-300 rounded-lg px-4 py-3"></textarea>
                 </div>
 
-                <!-- Topics List -->
+                <!-- Libro de Temas -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="px-6 py-4 bg-olive-700 text-white">
-                        <h3 class="text-lg font-semibold">Temas Desarrollados por Clase</h3>
+                    <div class="px-6 py-4 bg-olive-700 text-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div>
+                            <h3 class="text-lg font-semibold">Libro de Temas</h3>
+                            <p class="text-olive-100 text-sm">Registro de cada clase: fecha, tema desarrollado y estrategias.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="addTopicRow()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Agregar fila</button>
+                            <button onclick="saveTopicsTable()" class="bg-white text-olive-800 hover:bg-olive-50 px-4 py-2 rounded-lg text-sm font-semibold transition">Guardar</button>
+                            <button onclick="exportTopicsPDF()" class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition">Descargar PDF</button>
+                        </div>
                     </div>
-                    <div id="topicsList" class="divide-y divide-gray-200">
-                        <p class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los temas</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[850px]">
+                            <thead class="bg-olive-100 text-olive-900">
+                                <tr>
+                                    <th class="w-40 px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-olive-200">Fecha</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-olive-200">Tema desarrollado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider">Estrategias</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topicsTableBody" class="divide-y divide-gray-200 bg-white">
+                                <tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver el Libro de Temas</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -546,47 +528,15 @@
         </div>
     </div>
 
-    <!-- Topic Modal -->
-    <div id="topicModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-        <div class="modal bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Agregar Tema de Clase</h3>
-                <button onclick="closeTopicModal()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <form onsubmit="saveTopic(event)">
-                <input type="hidden" id="topicId">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Fecha de la Clase *</label>
-                        <input type="date" id="topicDate" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Numero de Clase</label>
-                        <input type="number" id="topicNumber" class="w-full border border-gray-300 rounded-lg px-4 py-2" placeholder="Ej: 1, 2, 3...">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Tema Desarrollado *</label>
-                        <textarea id="topicContent" required rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2" placeholder="Describa el tema desarrollado en la clase..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-2">Observaciones</label>
-                        <textarea id="topicNotes" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-2" placeholder="Observaciones adicionales..."></textarea>
-                    </div>
-                </div>
-                <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeTopicModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="flex-1 btn-orange text-white px-4 py-2 rounded-lg transition">
-                        Guardar
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- Bulk Import Modal -->
+    <div id="bulkImportModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+      <div class="modal bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+        <div class="flex items-center justify-between mb-5"><h3 class="text-xl font-bold">Carga masiva de estudiantes</h3><button onclick="closeBulkImportModal()" class="text-gray-500">✕</button></div>
+        <p class="text-sm text-gray-600 mb-4">El archivo Excel debe contener exactamente las columnas <b>Estudiante</b> y <b>DNI</b>. El nombre puede estar escrito como “Apellido, Nombres” o como nombre completo.</p>
+        <label class="block font-medium mb-2">Aula de destino</label><select id="bulkClassroom" class="w-full border rounded-lg px-4 py-2 mb-4"></select>
+        <label class="block font-medium mb-2">Archivo Excel</label><input id="bulkExcelFile" type="file" accept=".xlsx,.xls" class="w-full border rounded-lg px-3 py-2 mb-5">
+        <div class="flex gap-3"><button onclick="closeBulkImportModal()" class="flex-1 bg-gray-200 px-4 py-2 rounded-lg">Cancelar</button><button onclick="importStudentsFromExcel()" class="flex-1 btn-olive text-white px-4 py-2 rounded-lg">Importar estudiantes</button></div>
+      </div>
     </div>
 
     <!-- Settings Modal -->
@@ -1082,7 +1032,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-sm rounded-full ${average >= 6 ? 'bg-olive-100 text-olive-800' : average >= 4 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}">
+                            <span class="px-2 py-1 text-sm rounded-full ${average >= 8 ? 'bg-green-100 text-green-800' : average >= 5 ? 'bg-sky-100 text-sky-800' : 'bg-red-100 text-red-800'}">
                                 ${average > 0 ? average.toFixed(1) : '-'}
                             </span>
                         </td>
@@ -1196,174 +1146,19 @@
         // Attendance
         function loadAttendanceSelects() {
             const select = document.getElementById('attendanceClassroom');
-            select.innerHTML = '<option value="">Seleccione un aula</option>' +
-                data.classrooms.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-
-            document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+            const current = select.value;
+            select.innerHTML = '<option value="">Seleccione un aula</option>' + data.classrooms.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            if (data.classrooms.some(c => c.id === current)) select.value = current;
+            if (!document.getElementById('attendanceDate').value) document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
         }
-
-        function loadAttendanceData() {
-            const classroomId = document.getElementById('attendanceClassroom').value;
-            const date = document.getElementById('attendanceDate').value;
-            const container = document.getElementById('attendanceList');
-
-            if (!classroomId) {
-                container.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los estudiantes</td></tr>';
-                return;
-            }
-
-            const students = data.students.filter(s => s.classroomId === classroomId);
-            if (students.length === 0) {
-                container.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No hay estudiantes en esta aula</td></tr>';
-                return;
-            }
-
-            const dateKey = `${classroomId}_${date}`;
-            const attendanceData = data.attendance[dateKey] || {};
-
-            container.innerHTML = students.map(student => {
-                const status = attendanceData[student.id] || '';
-                const attendancePercent = calculateStudentAttendance(student.id);
-                return `
-                    <tr class="hover:bg-olive-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">${student.lastName}, ${student.firstName}</td>
-                        <td class="px-6 py-4 text-gray-700">${student.dni}</td>
-                        <td class="px-6 py-4 text-center">
-                            <input type="radio" name="att_${student.id}" value="present" ${status === 'present' ? 'checked' : ''} class="w-4 h-4 text-olive-600 focus:ring-olive-500">
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <input type="radio" name="att_${student.id}" value="absent" ${status === 'absent' ? 'checked' : ''} class="w-4 h-4 text-red-600 focus:ring-red-500">
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <input type="radio" name="att_${student.id}" value="late" ${status === 'late' ? 'checked' : ''} class="w-4 h-4 text-orange-500 focus:ring-orange-500">
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <input type="radio" name="att_${student.id}" value="justified" ${status === 'justified' ? 'checked' : ''} class="w-4 h-4 text-gray-600 focus:ring-gray-500">
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center">
-                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                                    <div class="progress-bar bg-${attendancePercent >= 75 ? 'olive-600' : attendancePercent >= 50 ? 'orange-500' : 'red-500'} h-2 rounded-full" style="width: ${attendancePercent}%"></div>
-                                </div>
-                                <span class="text-sm">${attendancePercent}%</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function saveAttendance() {
-            const classroomId = document.getElementById('attendanceClassroom').value;
-            const date = document.getElementById('attendanceDate').value;
-
-            if (!classroomId || !date) {
-                showToast('Seleccione un aula y una fecha', 'error');
-                return;
-            }
-
-            const dateKey = `${classroomId}_${date}`;
-            data.attendance[dateKey] = {};
-
-            const students = data.students.filter(s => s.classroomId === classroomId);
-            students.forEach(student => {
-                const radio = document.querySelector(`input[name="att_${student.id}"]:checked`);
-                if (radio) {
-                    data.attendance[dateKey][student.id] = radio.value;
-                }
-            });
-
-            saveData();
-            updateUI();
-            loadAttendanceData();
-            showToast('Asistencia guardada exitosamente');
-        }
-
-        function exportAttendancePDF() {
-            const classroomId = document.getElementById('attendanceClassroom').value;
-            if (!classroomId) {
-                showToast('Seleccione un aula', 'error');
-                return;
-            }
-
-            const classroom = data.classrooms.find(c => c.id === classroomId);
-            const students = data.students.filter(s => s.classroomId === classroomId);
-
-            const doc = new jsPDF();
-            let yPos = 15;
-
-            // Add logo if exists
-            if (data.settings.logo) {
-                try {
-                    doc.addImage(data.settings.logo, 'PNG', 14, 10, 25, 25);
-                    yPos = 12;
-                } catch(e) {
-                    console.log('Error adding logo to PDF');
-                }
-            }
-
-            // Header
-            doc.setFontSize(14);
-            doc.setTextColor(107, 122, 61); // Olive color
-            doc.text(data.settings.institution || 'Sistema de Gestion Educativa', data.settings.logo ? 45 : 105, yPos, { align: data.settings.logo ? 'left' : 'center' });
-            yPos += 6;
-            doc.setFontSize(10);
-            doc.setTextColor(60, 60, 60);
-            if (data.settings.address) {
-                doc.text(data.settings.address, data.settings.logo ? 45 : 105, yPos, { align: data.settings.logo ? 'left' : 'center' });
-                yPos += 5;
-            }
-            if (data.settings.phone || data.settings.email) {
-                const contactInfo = [data.settings.phone, data.settings.email].filter(Boolean).join(' | ');
-                doc.text(contactInfo, data.settings.logo ? 45 : 105, yPos, { align: data.settings.logo ? 'left' : 'center' });
-                yPos += 5;
-            }
-            doc.text(`Docente: ${data.settings.teacher || 'No especificado'}`, data.settings.logo ? 45 : 105, yPos, { align: data.settings.logo ? 'left' : 'center' });
-
-            yPos = data.settings.logo ? 40 : yPos + 8;
-            doc.setFontSize(12);
-            doc.setTextColor(249, 115, 22); // Orange color
-            doc.text(`Registro de Asistencia - ${classroom.name}`, 105, yPos, { align: 'center' });
-            yPos += 6;
-            doc.setFontSize(9);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Generado: ${new Date().toLocaleDateString()}`, 105, yPos, { align: 'center' });
-
-            // Get all dates for this classroom
-            const dates = Object.keys(data.attendance)
-                .filter(key => key.startsWith(classroomId))
-                .map(key => key.split('_')[1])
-                .sort();
-
-            // Table data
-            const headers = [['Estudiante', 'DNI', ...dates.map(d => d.slice(5)), '% Asist.']];
-            const rows = students.map(student => {
-                const attendanceValues = dates.map(date => {
-                    const key = `${classroomId}_${date}`;
-                    const status = data.attendance[key]?.[student.id] || '-';
-                    return status === 'present' ? 'P' : status === 'absent' ? 'A' : status === 'late' ? 'T' : status === 'justified' ? 'J' : '-';
-                });
-                const percent = calculateStudentAttendance(student.id);
-                return [`${student.lastName}, ${student.firstName}`, student.dni, ...attendanceValues, `${percent}%`];
-            });
-
-            doc.autoTable({
-                head: headers,
-                body: rows,
-                startY: yPos + 5,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [107, 122, 61] } // Olive color
-            });
-
-            // Legend
-            const finalY = doc.lastAutoTable.finalY + 10;
-            doc.setFontSize(8);
-            doc.setTextColor(60, 60, 60);
-            doc.text('Leyenda: P = Presente, A = Ausente, T = Tardanza, J = Justificado', 14, finalY);
-
-            doc.save(`asistencia_${classroom.name.replace(/\s+/g, '_')}.pdf`);
-            showToast('PDF de asistencia generado');
-        }
+        function getAttendanceDates(classroomId) { return Object.keys(data.attendance).filter(k => k.startsWith(classroomId + '_')).map(k => k.slice(classroomId.length + 1)).sort(); }
+        function monthTint(date, idx) { const palette=['#fef3c7','#dbeafe','#dcfce7','#fce7f3','#ede9fe','#ffedd5']; const m=new Date(date+'T00:00:00').getMonth(); return palette[m % palette.length]; }
+        function attendanceLetter(v){ return v==='present'?'P':v==='absent'?'A':v==='late'?'T':'P'; }
+        function attendanceValue(letter){ return letter==='A'?'absent':letter==='T'?'late':'present'; }
+        function cycleAttendance(studentId,date){ const classroomId=document.getElementById('attendanceClassroom').value; const key=`${classroomId}_${date}`; if(!data.attendance[key]) data.attendance[key]={}; const cur=attendanceLetter(data.attendance[key][studentId]); const next=cur==='P'?'A':cur==='A'?'T':'P'; data.attendance[key][studentId]=attendanceValue(next); saveData(); loadAttendanceData(); updateDashboard(); }
+        function addAttendanceDate(){ const classroomId=document.getElementById('attendanceClassroom').value; const date=document.getElementById('attendanceDate').value; if(!classroomId||!date){showToast('Seleccione un aula y una fecha','error');return;} const key=`${classroomId}_${date}`; if(data.attendance[key] && !confirm('Esa fecha ya existe. ¿Desea completar como P los estudiantes sin estado?')) return; if(!data.attendance[key]) data.attendance[key]={}; data.students.filter(s=>s.classroomId===classroomId).forEach(st=>{if(!data.attendance[key][st.id]) data.attendance[key][st.id]='present';}); saveData(); loadAttendanceData(); updateDashboard(); showToast('Columna de asistencia creada'); }
+        function loadAttendanceData(){ const classroomId=document.getElementById('attendanceClassroom').value; const header=document.getElementById('attendanceHeader'); const body=document.getElementById('attendanceList'); if(!classroomId){header.innerHTML='<th class="px-4 py-3 text-left text-xs uppercase">Estudiante</th><th class="px-4 py-3 text-left text-xs uppercase">DNI</th><th class="px-4 py-3 text-center text-xs uppercase">% Asistencia</th>';body.innerHTML='<tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los estudiantes</td></tr>';return;} const students=data.students.filter(s=>s.classroomId===classroomId); const dates=getAttendanceDates(classroomId); header.innerHTML=`<th class="px-4 py-3 text-left text-xs uppercase sticky left-0 bg-olive-700">Estudiante</th><th class="px-4 py-3 text-left text-xs uppercase">DNI</th>${dates.map(d=>`<th class="px-3 py-3 text-center text-xs text-gray-800" style="background:${monthTint(d)}">${new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})}</th>`).join('')}<th class="px-4 py-3 text-center text-xs uppercase">% Asistencia</th>`; if(!students.length){body.innerHTML=`<tr><td colspan="${3+dates.length}" class="px-6 py-8 text-center text-gray-500">No hay estudiantes en esta aula</td></tr>`;return;} body.innerHTML=students.map(st=>{const pct=calculateStudentAttendance(st.id); return `<tr class="border-b"><td class="px-4 py-3 font-medium sticky left-0 bg-white">${st.lastName}, ${st.firstName}</td><td class="px-4 py-3">${st.dni}</td>${dates.map(d=>{const l=attendanceLetter(data.attendance[`${classroomId}_${d}`]?.[st.id]); const cls=l==='A'?'text-red-700 font-bold':l==='T'?'text-orange-700 font-bold':'text-olive-700 font-bold'; return `<td class="px-2 py-2 text-center" style="background:${monthTint(d)}"><button onclick="cycleAttendance('${st.id}','${d}')" class="w-9 h-9 rounded bg-white/80 ${cls}">${l}</button></td>`;}).join('')}<td class="px-4 py-3 text-center font-bold ${pct<70?'bg-red-100 text-red-700':'text-olive-700'}">${pct}%</td></tr>`;}).join(''); }
+        function exportAttendancePDF(){ const classroomId=document.getElementById('attendanceClassroom').value; if(!classroomId){showToast('Seleccione un aula','error');return;} const classroom=data.classrooms.find(c=>c.id===classroomId); const students=data.students.filter(s=>s.classroomId===classroomId); const dates=getAttendanceDates(classroomId); const doc=new jsPDF({orientation:'landscape'}); let y=12; addPdfHeader(doc, classroom, 'Planilla de Asistencia'); y=42; const head=[['Estudiante','DNI',...dates.map(d=>new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})),'%']]; const body=students.map(st=>[`${st.lastName}, ${st.firstName}`,st.dni,...dates.map(d=>attendanceLetter(data.attendance[`${classroomId}_${d}`]?.[st.id])),`${calculateStudentAttendance(st.id)}%`]); doc.autoTable({head,body,startY:y,styles:{fontSize:7,halign:'center'},columnStyles:{0:{halign:'left'}},headStyles:{fillColor:[107,122,61]},didParseCell:function(h){if(h.section==='body'&&h.column.index===head[0].length-1){const n=parseFloat(h.cell.raw);if(n<70){h.cell.styles.fillColor=[254,226,226];h.cell.styles.textColor=[185,28,28];}}}}); doc.save(`asistencia_${safeFile(classroom.name)}.pdf`); showToast('PDF de asistencia generado'); }
 
         // Grades
         function loadGradesSelects() {
@@ -1412,9 +1207,9 @@
                         <td class="px-6 py-4 text-gray-700">${student.dni}</td>
                         ${evaluations.map(e => `
                             <td class="px-6 py-4 text-center">
-                                <input type="number" min="0" max="10" step="0.1" value="${studentGrades[e] || ''}"
+                                <input type="number" min="1" max="10" step="1" value="${studentGrades[e] || ''}"
                                     data-student="${student.id}" data-eval="${e}"
-                                    class="grade-input w-16 text-center border border-gray-300 rounded px-2 py-1 focus:border-olive-500">
+                                    oninput="styleGradeInput(this)" class="grade-input w-16 text-center border border-gray-300 rounded px-2 py-1 focus:border-olive-500">
                             </td>
                         `).join('')}
                         <td class="px-6 py-4 text-center">
@@ -1425,6 +1220,7 @@
                     </tr>
                 `;
             }).join('');
+            document.querySelectorAll('.grade-input').forEach(styleGradeInput);
         }
 
         function addEvaluation() {
@@ -1476,6 +1272,8 @@
 
         function saveGrades() {
             const inputs = document.querySelectorAll('.grade-input');
+            const invalid = Array.from(inputs).some(input => input.value && (!Number.isInteger(Number(input.value)) || Number(input.value) < 1 || Number(input.value) > 10));
+            if (invalid) { showToast('Las notas deben ser números enteros del 1 al 10','error'); return; }
             inputs.forEach(input => {
                 const studentId = input.dataset.student;
                 const evalName = input.dataset.eval;
@@ -1554,71 +1352,145 @@
             });
 
             doc.autoTable({
-                head: headers,
-                body: rows,
-                startY: yPos + 5,
-                styles: { fontSize: 9 },
-                headStyles: { fillColor: [107, 122, 61] } // Olive color
+                head: headers, body: rows, startY: yPos + 5,
+                styles: { fontSize: 9 }, headStyles: { fillColor: [107, 122, 61] },
+                didParseCell: function(h) {
+                    if (h.section !== 'body' || h.column.index < 2) return;
+                    const v = parseFloat(h.cell.raw);
+                    if (isNaN(v)) return;
+                    if (v < 5) { h.cell.styles.fillColor=[254,226,226]; h.cell.styles.textColor=[185,28,28]; }
+                    else if (v < 8) { h.cell.styles.fillColor=[224,242,254]; h.cell.styles.textColor=[3,105,161]; }
+                    else { h.cell.styles.fillColor=[220,252,231]; h.cell.styles.textColor=[21,128,61]; }
+                }
             });
 
             doc.save(`calificaciones_${classroom.name.replace(/\s+/g, '_')}.pdf`);
             showToast('PDF de calificaciones generado');
         }
 
-        // Syllabus & Topics
+        // Programa y Libro de Temas
         function loadSyllabusSelects() {
             const select = document.getElementById('syllabusClassroom');
+            const current = select.value;
             select.innerHTML = '<option value="">Seleccione un aula</option>' +
-                data.classrooms.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                data.classrooms.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            if (data.classrooms.some(c => c.id === current)) select.value = current;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         function loadSyllabusData() {
             const classroomId = document.getElementById('syllabusClassroom').value;
             const programArea = document.getElementById('syllabusProgram');
-            const topicsContainer = document.getElementById('topicsList');
-
             if (!classroomId) {
                 programArea.value = '';
-                topicsContainer.innerHTML = '<p class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver los temas</p>';
+                renderTopicsTable([]);
                 return;
             }
 
             programArea.value = data.programs[classroomId] || '';
+            const topics = (data.topics[classroomId] || []).map(t => ({
+                id: t.id || generateId(),
+                date: t.date || '',
+                content: t.content || '',
+                strategies: t.strategies || t.activities || t.notes || ''
+            })).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+            renderTopicsTable(topics);
+        }
 
-            const topics = data.topics[classroomId] || [];
-            if (topics.length === 0) {
-                topicsContainer.innerHTML = '<p class="px-6 py-8 text-center text-gray-500">No hay temas registrados para esta aula</p>';
+        function renderTopicsTable(topics) {
+            const body = document.getElementById('topicsTableBody');
+            const classroomId = document.getElementById('syllabusClassroom').value;
+            if (!classroomId) {
+                body.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-500">Seleccione un aula para ver el Libro de Temas</td></tr>';
                 return;
             }
+            if (!topics.length) {
+                body.innerHTML = '<tr id="topicsEmptyRow"><td colspan="3" class="px-6 py-8 text-center text-gray-500">Todavía no hay registros. Presione “Agregar fila” para comenzar.</td></tr>';
+                return;
+            }
+            body.innerHTML = topics.map(topic => topicRowHtml(topic)).join('');
+        }
 
-            topicsContainer.innerHTML = topics.sort((a, b) => new Date(a.date) - new Date(b.date)).map(topic => `
-                <div class="p-4 hover:bg-olive-50">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="bg-olive-100 text-olive-800 px-3 py-1 rounded-full text-sm font-medium">
-                                    Clase ${topic.number || '-'}
-                                </span>
-                                <span class="text-gray-500 text-sm">${new Date(topic.date).toLocaleDateString()}</span>
-                            </div>
-                            <p class="text-gray-800 font-medium">${topic.content}</p>
-                            ${topic.notes ? `<p class="text-gray-500 text-sm mt-1">${topic.notes}</p>` : ''}
+        function topicRowHtml(topic = {}) {
+            const id = topic.id || generateId();
+            return `
+                <tr class="topic-row align-top hover:bg-olive-50" data-id="${escapeHtml(id)}">
+                    <td class="p-3 border-r border-gray-200">
+                        <input type="date" value="${escapeHtml(topic.date || '')}" class="topic-date w-full border border-gray-300 rounded-lg px-3 py-2 bg-white focus:border-olive-500">
+                    </td>
+                    <td class="p-3 border-r border-gray-200">
+                        <textarea rows="3" class="topic-content w-full border border-gray-300 rounded-lg px-3 py-2 resize-y focus:border-olive-500" placeholder="Tema desarrollado en la clase">${escapeHtml(topic.content || '')}</textarea>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex gap-2 items-start">
+                            <textarea rows="3" class="topic-strategies flex-1 border border-gray-300 rounded-lg px-3 py-2 resize-y focus:border-olive-500" placeholder="Estrategias utilizadas en la clase">${escapeHtml(topic.strategies || '')}</textarea>
+                            <button type="button" onclick="removeTopicRow(this)" class="shrink-0 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-2 rounded-lg text-sm" title="Eliminar fila">Eliminar</button>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="editTopic('${topic.id}')" class="text-olive-600 hover:text-olive-800">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button onclick="deleteTopic('${topic.id}')" class="text-red-600 hover:text-red-800">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                    </td>
+                </tr>`;
+        }
+
+        function addTopicRow() {
+            const classroomId = document.getElementById('syllabusClassroom').value;
+            if (!classroomId) {
+                showToast('Seleccione un aula primero', 'error');
+                return;
+            }
+            const body = document.getElementById('topicsTableBody');
+            const empty = document.getElementById('topicsEmptyRow');
+            if (empty) empty.remove();
+            body.insertAdjacentHTML('beforeend', topicRowHtml({
+                id: generateId(),
+                date: new Date().toISOString().split('T')[0],
+                content: '',
+                strategies: ''
+            }));
+            const rows = body.querySelectorAll('.topic-row');
+            rows[rows.length - 1]?.querySelector('.topic-content')?.focus();
+        }
+
+        function removeTopicRow(button) {
+            if (!confirm('¿Eliminar esta fila del Libro de Temas?')) return;
+            button.closest('.topic-row')?.remove();
+            const body = document.getElementById('topicsTableBody');
+            if (!body.querySelector('.topic-row')) {
+                body.innerHTML = '<tr id="topicsEmptyRow"><td colspan="3" class="px-6 py-8 text-center text-gray-500">Todavía no hay registros. Presione “Agregar fila” para comenzar.</td></tr>';
+            }
+        }
+
+        function collectTopicsFromTable() {
+            return [...document.querySelectorAll('#topicsTableBody .topic-row')].map(row => ({
+                id: row.dataset.id || generateId(),
+                date: row.querySelector('.topic-date').value,
+                content: row.querySelector('.topic-content').value.trim(),
+                strategies: row.querySelector('.topic-strategies').value.trim()
+            })).filter(t => t.date || t.content || t.strategies);
+        }
+
+        function saveTopicsTable(silent = false) {
+            const classroomId = document.getElementById('syllabusClassroom').value;
+            if (!classroomId) {
+                if (!silent) showToast('Seleccione un aula primero', 'error');
+                return false;
+            }
+            const topics = collectTopicsFromTable();
+            const incomplete = topics.some(t => !t.date || !t.content || !t.strategies);
+            if (incomplete) {
+                if (!silent) showToast('Complete Fecha, Tema desarrollado y Estrategias en cada fila', 'error');
+                return false;
+            }
+            data.topics[classroomId] = topics;
+            saveData();
+            if (!silent) showToast('Libro de Temas guardado exitosamente');
+            return true;
         }
 
         function saveSyllabusProgram() {
@@ -1627,89 +1499,57 @@
                 showToast('Seleccione un aula primero', 'error');
                 return;
             }
-
             data.programs[classroomId] = document.getElementById('syllabusProgram').value;
             saveData();
             showToast('Programa guardado exitosamente');
         }
 
-        function openTopicModal() {
-            const classroomId = document.getElementById('syllabusClassroom').value;
-            if (!classroomId) {
-                showToast('Seleccione un aula primero', 'error');
-                return;
-            }
-
-            document.getElementById('topicId').value = '';
-            document.getElementById('topicDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('topicNumber').value = '';
-            document.getElementById('topicContent').value = '';
-            document.getElementById('topicNotes').value = '';
-
-            document.getElementById('topicModal').classList.remove('hidden');
-            document.getElementById('topicModal').classList.add('flex');
-        }
-
-        function closeTopicModal() {
-            document.getElementById('topicModal').classList.add('hidden');
-            document.getElementById('topicModal').classList.remove('flex');
-        }
-
-        function editTopic(topicId) {
-            const classroomId = document.getElementById('syllabusClassroom').value;
-            const topics = data.topics[classroomId] || [];
-            const topic = topics.find(t => t.id === topicId);
-            if (!topic) return;
-
-            document.getElementById('topicId').value = topic.id;
-            document.getElementById('topicDate').value = topic.date;
-            document.getElementById('topicNumber').value = topic.number || '';
-            document.getElementById('topicContent').value = topic.content;
-            document.getElementById('topicNotes').value = topic.notes || '';
-
-            document.getElementById('topicModal').classList.remove('hidden');
-            document.getElementById('topicModal').classList.add('flex');
-        }
-
-        function saveTopic(e) {
-            e.preventDefault();
-            const classroomId = document.getElementById('syllabusClassroom').value;
-            const topicId = document.getElementById('topicId').value;
-
-            const topic = {
-                id: topicId || generateId(),
-                date: document.getElementById('topicDate').value,
-                number: document.getElementById('topicNumber').value,
-                content: document.getElementById('topicContent').value,
-                notes: document.getElementById('topicNotes').value
-            };
-
-            if (!data.topics[classroomId]) {
-                data.topics[classroomId] = [];
-            }
-
-            if (topicId) {
-                const index = data.topics[classroomId].findIndex(t => t.id === topicId);
-                data.topics[classroomId][index] = topic;
-            } else {
-                data.topics[classroomId].push(topic);
-            }
-
+        // Helpers / Excel / PDF
+        function safeFile(v){ return (v||'archivo').replace(/[^a-z0-9áéíóúñ_-]+/gi,'_'); }
+        function splitStudentName(full){ full=String(full||'').trim(); if(full.includes(',')){const [last,...rest]=full.split(','); return {lastName:last.trim(),firstName:rest.join(',').trim()||'-'};} const parts=full.split(/\s+/); if(parts.length===1)return {lastName:parts[0],firstName:'-'}; return {lastName:parts[0],firstName:parts.slice(1).join(' ')}; }
+        function openBulkImportModal(){ const sel=document.getElementById('bulkClassroom'); sel.innerHTML='<option value="">Seleccione un aula</option>'+data.classrooms.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''); document.getElementById('bulkExcelFile').value=''; document.getElementById('bulkImportModal').classList.remove('hidden'); document.getElementById('bulkImportModal').classList.add('flex'); }
+        function closeBulkImportModal(){ document.getElementById('bulkImportModal').classList.add('hidden'); document.getElementById('bulkImportModal').classList.remove('flex'); }
+        function importStudentsFromExcel(){ const classroomId=document.getElementById('bulkClassroom').value; const file=document.getElementById('bulkExcelFile').files[0]; if(!classroomId||!file){showToast('Seleccione aula y archivo Excel','error');return;} const reader=new FileReader(); reader.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'}); const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}); if(!rows.length)throw new Error('Archivo vacío'); const keys=Object.keys(rows[0]); if(!keys.includes('Estudiante')||!keys.includes('DNI'))throw new Error('Debe contener las columnas Estudiante y DNI'); let added=0, skipped=0; rows.forEach(r=>{const name=String(r.Estudiante||'').trim(), dni=String(r.DNI||'').trim(); if(!name||!dni){skipped++;return;} if(data.students.some(s=>String(s.dni)===dni&&s.classroomId===classroomId)){skipped++;return;} const n=splitStudentName(name); data.students.push({id:generateId(),lastName:n.lastName,firstName:n.firstName,dni,phone:'',email:'',classroomId}); added++;}); saveData(); updateUI(); closeBulkImportModal(); showToast(`${added} estudiantes importados${skipped?` (${skipped} omitidos)`:''}`);}catch(err){showToast(err.message||'No se pudo leer el Excel','error');}}; reader.readAsArrayBuffer(file); }
+        function gradeColorClass(v){ v=parseFloat(v); if(!v)return ''; return v<=4?'bg-red-100 text-red-800':v<=7?'bg-sky-100 text-sky-800':'bg-green-100 text-green-800'; }
+        function styleGradeInput(input){ const v=parseFloat(input.value); input.classList.remove('bg-red-100','text-red-800','bg-sky-100','text-sky-800','bg-green-100','text-green-800'); if(v>=1&&v<5)input.classList.add('bg-red-100','text-red-800'); else if(v>=5&&v<8)input.classList.add('bg-sky-100','text-sky-800'); else if(v>=8&&v<=10)input.classList.add('bg-green-100','text-green-800'); }
+        function addPdfHeader(doc,classroom,title){ let x=data.settings.logo?45:14; if(data.settings.logo){try{doc.addImage(data.settings.logo,'PNG',14,8,24,24);}catch(e){}} doc.setFontSize(14); doc.setTextColor(107,122,61); doc.text(data.settings.institution||'Sistema de Gestión Educativa',x,13); doc.setFontSize(9); doc.setTextColor(70,70,70); let y=19; if(data.settings.address){doc.text(data.settings.address,x,y);y+=4;} const contact=[data.settings.phone,data.settings.email].filter(Boolean).join(' | '); if(contact){doc.text(contact,x,y);y+=4;} doc.text(`Docente: ${data.settings.teacher||'No especificado'}`,x,y); y+=5; if(classroom)doc.text(`Curso/Aula: ${classroom.name}${classroom.period?' - '+classroom.period:''}`,x,y); doc.setFontSize(13); doc.setTextColor(249,115,22); doc.text(title,doc.internal.pageSize.getWidth()/2,36,{align:'center'}); }
+        function loadProgramTextFile(event){ const file=event.target.files[0]; if(!file)return; const reader=new FileReader(); reader.onload=e=>{document.getElementById('syllabusProgram').value=e.target.result; showToast('Programa cargado desde archivo de texto');}; reader.readAsText(file,'UTF-8'); }
+        function exportProgramPDF(){ const classroomId=document.getElementById('syllabusClassroom').value; if(!classroomId){showToast('Seleccione un aula','error');return;} saveSyllabusProgram(); const classroom=data.classrooms.find(c=>c.id===classroomId); const program=data.programs[classroomId]||''; const doc=new jsPDF(); addPdfHeader(doc,classroom,'Programa del Curso'); doc.setFontSize(10); doc.setTextColor(40,40,40); const lines=doc.splitTextToSize(program||'Sin contenido cargado',180); let y=46; lines.forEach(line=>{if(y>280){doc.addPage();addPdfHeader(doc,classroom,'Programa del Curso');y=46;} doc.text(line,15,y);y+=5;}); doc.save(`programa_${safeFile(classroom.name)}.pdf`); }
+        function exportTopicsPDF(){
+            const classroomId=document.getElementById('syllabusClassroom').value;
+            if(!classroomId){showToast('Seleccione un aula','error');return;}
+            const topics=collectTopicsFromTable();
+            const incomplete=topics.some(t=>!t.date||!t.content||!t.strategies);
+            if(incomplete){showToast('Complete las tres columnas antes de descargar el PDF','error');return;}
+            data.topics[classroomId]=topics;
             saveData();
-            closeTopicModal();
-            loadSyllabusData();
-            showToast('Tema guardado exitosamente');
-        }
-
-        function deleteTopic(topicId) {
-            if (!confirm('Esta seguro de eliminar este tema?')) return;
-
-            const classroomId = document.getElementById('syllabusClassroom').value;
-            data.topics[classroomId] = data.topics[classroomId].filter(t => t.id !== topicId);
-
-            saveData();
-            loadSyllabusData();
-            showToast('Tema eliminado');
+            const classroom=data.classrooms.find(c=>c.id===classroomId);
+            const ordered=topics.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+            const doc=new jsPDF();
+            addPdfHeader(doc,classroom,'Libro de Temas');
+            const body=ordered.map(t=>[
+                new Date(t.date+'T00:00:00').toLocaleDateString('es-AR'),
+                t.content,
+                t.strategies
+            ]);
+            doc.autoTable({
+                head:[['Fecha','Tema desarrollado','Estrategias']],
+                body,
+                startY:44,
+                margin:{left:14,right:14},
+                styles:{fontSize:9,valign:'top',cellPadding:3,overflow:'linebreak'},
+                headStyles:{fillColor:[107,122,61],textColor:[255,255,255],fontStyle:'bold'},
+                alternateRowStyles:{fillColor:[247,248,243]},
+                columnStyles:{0:{cellWidth:27},1:{cellWidth:76},2:{cellWidth:79}},
+                didDrawPage:function(){
+                    const pageHeight=doc.internal.pageSize.getHeight();
+                    doc.setFontSize(8);
+                    doc.setTextColor(120,120,120);
+                    doc.text(`Página ${doc.internal.getNumberOfPages()}`,doc.internal.pageSize.getWidth()-14,pageHeight-8,{align:'right'});
+                }
+            });
+            doc.save(`libro_de_temas_${safeFile(classroom.name)}.pdf`);
+            showToast('PDF del Libro de Temas generado');
         }
 
         // Settings
